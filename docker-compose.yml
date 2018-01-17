@@ -1,0 +1,61 @@
+version: "3"
+services:
+  redis:
+    image: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - /home/docker/redis:/data/redis
+    networks:
+      - webnet
+
+  mysql:
+    image: mysql
+    volumes: /home/docker/mysql:/data/mysql
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_DATABASE=officeWebsite
+      - MYSQL_ROOT_PASSWORD=%]6}/z> E(3&-c|
+    networks:
+      - webnet
+
+  web:
+    image: bigdata2013lee/officeWebsite:v1.0
+    command: python /app/manage.py runserver 0.0.0.0:8000
+    ports:
+      - "8000:8000"
+    links:
+      - mysql:mysql
+      - redis:redis
+    networks:
+      - webnet
+
+  nginx:
+    image: nginx
+    restart: always
+    ports:
+      - "80:80"
+    volumes:
+      - /www/static
+    volumes_from:
+      - web
+    links:
+      - web:web
+    networks:
+      - webnet
+
+  visualizer:
+    image: dockersamples/visualizer:stable
+    ports:
+      - "8080:8080"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    deploy:
+      placement:
+        constraints: [node.role == manager]
+    networks:
+      - webnet
+
+networks:
+  webnet:
